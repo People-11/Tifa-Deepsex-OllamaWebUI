@@ -1,680 +1,636 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ollama Chat</title>
-    <!-- CSS -->
-    <style>
-        body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background-color: #313131;
-}
-
-
-
-.think-container {
-    margin: 10px 0;
-    border: 1px solid #444;
-    border-radius: 5px;
-    overflow: hidden;
-}
-
-.think-toggle {
-    background-color: #2a2a2a;
-    padding: 8px 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-}
-
-.think-icon {
-    margin-right: 8px;
-}
-
-.think-content{
-    padding: 10px;
-    background-color: #262626;
-}
-
- .think-content2{
-    padding: 10px;
-    background-color: #262626;
-}
-
-.think-content2 pre {
-    margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
-.think-content pre {
-    margin: 0;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-}
-
-
-
-.container {
-    display: flex;
-    flex-direction: column; 
-    height: 100vh;
-    align-items: center;
-    padding: 1rem;
-    box-sizing: border-box;
-}
-.chat-container {
-    flex: 1;
-    height: 0;
-    border-radius: 10px;
-    /* box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); */
-    padding-bottom: 20px;
-    box-sizing: border-box;
-    /* background: linear-gradient(135deg,#141e3009,#243b5509); */
-    overflow-y: scroll;
-}
-.chat-container::-webkit-scrollbar {
-    display: none;
-}
-.chat {
-    margin-bottom: 15px;
-}
-.chat.user {
-    text-align: right;
-}
-.chat.assistant {
-    text-align: left;
-}
-.chat .role {
-    font-weight: bold;
-    margin-bottom: 5px;
-    color: white;
-}
-.chat .message {
-    display: inline-block;
-    padding: 0 10px;
-    border-radius: 10px;
-    box-sizing: border-box;
-    max-width: 100%;
-}
-.chat.user .message {
-    text-align: left;
-    color: white;
-    background: #ffffff12;
-}
-.chat.assistant .message {
-    background: #ffffff12;
-    color: white;
-}
-#messages {
-    flex: 2;
-    overflow-y: scroll;
-    padding: 1rem;
-    border-right: 1px solid #ccc;
-    max-width: 100%;
-    overflow-x: scroll;
-}
-
-#message-form {
-    padding: 1rem 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-#message-input{
-    flex: 1;
-    margin-right: 1em;
-}
-textarea{
-    resize: none;
-    border: none;
-    outline: none;
-    border-radius: .5em;
-    padding: .5em;
-    background-color: #ffffff12;
-    color: white;
-}
-#submit{
-    border: none;
-    color: white;
-    background-color: #ffffff12;
-    border-radius: .5em .5em 0 0;
-    flex: 1;
-}
-#submit:hover{
-    background-color: #e0e0e0;
-}
-#submit:active{
-    background-color: #757575;
-}
-
-
-#rollback{
-    width: 5em;
-    height: 100%;
-    border: none;
-    background-color: #ffffff12;
-    color: white;
-    border-radius: .5em;
-    margin-left: 1em;
-}
-#rollback:hover{
-    background-color: #e0e0e0;
-}
-#rollback:active{
-    background-color: #757575;
-}
-#clean{
-    width: 5em;
-    height: 100%;
-    border: none;
-    background-color: #ffffff12;
-    color: white;
-    border-radius: .5em;
-    margin-left: 1em;
-}
-#clean:hover{
-    background-color: #e0e0e0;
-}
-#clean:active{
-    background-color: #757575;
-}
-#models{
-    border: none;
-    outline: none;
-    background-color: #ffffff12;
-    color: white;
-    border-radius: 0 0 .5em .5em;
-    text-align: center;
-    flex: 1;
-}
-option{
-    color: black;
-}
-/** 大屏 */
-@media (max-width: 993px) {
-    .chat-container{
-        width: 90%;
-    }
-    #message-form{
-        width: 90%;
-    }
-}
-/** 大屏 */
-@media (min-width: 993px) {
-    .chat-container{
-        width: 50%;
-    }
-    #message-form{
-        width: 50%;
-    }
-}
-/* 新增系统角色输入样式 */
-.system-input-container {
-    margin-bottom: 15px;
-    width: 90%;  /* 移动端默认宽度 */
-}
-.system-input-container label {
-    color: white;
-    display: block;
-    margin-bottom: 5px;
-    font-size: 0.9em;
-}
-#system-prompt {
-    width: 100%;
-    min-height: 60px;
-}
-
-/* 大屏适配 */
-@media (min-width: 993px) {
-    .system-input-container {
-        width: 50%;
-    }
-}
-/* 参数调整窗口 */
-/* 参数面板 */
-#param-window {
-    position: fixed;
-    bottom: 70px;
-    right: 20px;
-    background: #262626;
-    border: 1px solid #444;
-    border-radius: 8px;
-    overflow: hidden;
-    width: 220px;
-    transition: all 0.3s ease;
-}
-
-.param-header {
-    padding: 8px 12px;
-    background: #2a2a2a;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
-}
-
-.param-header:hover {
-    background: #303030;
-}
-
-.toggle-icon {
-    transition: transform 0.3s ease;
-}
-
-.param-content {
-    padding: 10px;
-    max-height: 500px;
-    transition: all 0.3s ease;
-}
-
-#param-window.collapsed .param-content {
-    max-height: 0;
-    padding: 0 10px;
-    overflow: hidden;
-}
-
-#param-window.collapsed .toggle-icon {
-    transform: rotate(-90deg);
-}
-
-.param-item {
-    margin: 6px 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.param-item label {
-    color: #e0e0e0;
-    font-size: 0.85em;
-    flex-shrink: 0;
-}
-
-.param-item input {
-    width: 80px;
-    padding: 4px 8px;
-    background: #ffffff12;
-    border: 1px solid #444;
-    border-radius: 4px;
-    color: white;
-    font-size: 0.9em;
-}
-
-#save-params, #export-chat {
-    flex: 1;
-    padding: 6px;
-    background: #ffffff12;
-    border: none;
-    border-radius: 4px;
-    color: white;
-    cursor: pointer;
-}
-
-#save-params:hover, #export-chat:hover {
-    background: #ffffff24;
-}
-
-#save-params:active, #export-chat:active {
-    background: #ffffff36;
-}
-    </style>
+    <link rel="stylesheet" href="css/try.css">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 </head>
 
-
 <body>
-    <div class="container">
-        <div class="system-input-container">
-            <label>系统角色设定：</label>
-            <textarea id="system-prompt" 
-                     placeholder="在此输入系统角色设定...">你现在是一个角色扮演模型，你正准备接受用户输入的角色。目前还未加载任何角色。</textarea>
+    <!-- 主要内容区域 -->
+    <main class="main-container" id="app" style="align-items: center;">
+        <div class="chat-layout">
+            <div class="chat-main-big">
+                <!-- 聊天主区域 -->
+                <section class="chat-main">
+                    <div class="chat-header">
+                        <h1>{{ currentCharacter?.name || '选择角色/Персонажи' }}</h1>
+                        <div class="header-actions">
+                            <button class="icon-btn" @click="shareChat">分享</button>
+                        </div>
+                    </div>
+                    <div class="chat-content">
+                        <div class="welcome-section" v-if="messages.length === 0">
+                            <h2>开始一段新的对话</h2>
+                            <!--                             <div class="mode-tabs">
+                                <button class="tab" :class="{active: mode==='tools'}"
+                                    @click="mode='tools'">使用工具</button>
+                                <button class="tab" :class="{active: mode==='chat'}" @click="mode='chat'">纯聊天</button>
+                            </div> -->
+                            <p class="description">选择合适的模式开始对话</p>
+                            <div class="suggestion-cards">
+                                <div class="card" v-for="suggestion in suggestions" @click="usePrompt(suggestion.prompt)">
+                                    <h3>{{suggestion.title}}</h3>
+                                    <p>{{suggestion.description}}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="message-list" v-else>
+                            <div v-for="msg in messages" :class="['message', msg.role]">
+                                <div class="message-content" v-html="formatMessage(msg.content)"></div>
+                            </div>
+                            <!-- 修改生成动画容器 -->
+                            <div class="message assistant generating-container" v-if="isGenerating" style="align-self: center;background-color: transparent;">
+                                <div class="generating-animation">
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                    <span class="dot"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 修改输入框部分 -->
+                    <div class="chat-input">
+                        <textarea ref="messageInput" v-model="inputMessage" placeholder="输入消息..." @keyup.enter="sendMessage"></textarea>
+                        <div class="input-actions">
+                            <button class="send-btn" @click="sendMessage">
+                                {{ isGenerating ? '停止' : '发送' }}
+                            </button>
+                        </div>
+                    </div>
+                </section>
+                <!-- 右侧属性面板 -->
+                <aside class="settings-panel">
+                    <div class="panel-section">
+                        <h3>模型选择</h3>
+                        <select v-model="settings.model">
+                            <option v-for="option in modelOptions" :key="option.value" :value="option.value">
+                                {{option.label}}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="panel-section">
+                        <h3>系统提示词</h3>
+                        <textarea v-model="settings.systemPrompt"></textarea>
+                    </div>
+                    <!-- 修改参数设置部分，添加数值显示 -->
+                    <div class="panel-section">
+                        <h3>参数设置</h3>
+                        <label>Temperature: {{settings.temperature}}
+                            <input type="range" v-model="settings.temperature" min="0" max="2" step="0.01">
+                        </label>
+                        <label>Top P: {{settings.topP}}
+                            <input type="range" v-model="settings.topP" min="0" max="1" step="0.1">
+                        </label>
+                        <label>Repetition Penalty: {{settings.repetitionPenalty}}
+                            <input type="range" v-model="settings.repetitionPenalty" min="1" max="2" step="0.01">
+                        </label>
+                        <label>Max Output Tokens: {{settings.maxoutputtokens}}
+                            <input type="range" v-model="settings.maxoutputtokens" min="100" max="2000" step="100">
+                        </label>
+                    </div>
+                    <button class="clear-btn" @click="clearHistory">清空聊天记录</button>
+                </aside>
+            </div>
         </div>
-        <div class="chat-container" id="chat-container"></div>
-        <div id="message-form">
-            <textarea type="text" id="message-input" rows="3" placeholder="聊天内容..."></textarea>
-            <div style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
-                <button id="submit">发送</button>
-                <div style="height: 1px;"></div>
-                <select id="models"></select>
-            </div>
-            <button id="rollback">回溯</button>
-            <button id="clean">清空</button>
-        </div>
-    </div>
-
-    <div id="param-window">
-        <div class="param-header" id="param-toggle">
-            <span>⚙️ 高级参数</span>
-            <span class="toggle-icon">▼</span>
-        </div>
-        <div class="param-content">
-            <div class="param-item">
-                <label>温度：</label>
-                <input type="number" id="temperature" step="0.1" min="0" max="2" placeholder="0.6">
-            </div>
-            <div class="param-item">
-                <label>重复惩罚：</label>
-                <input type="number" id="repeat_penalty" step="0.1" min="1" max="3" placeholder="1.1">
-            </div>
-            <div class="param-item">
-                <label>Top P：</label>
-                <input type="number" id="top_p" step="0.1" min="0" max="1" placeholder="0.6">
-            </div>
-            <div class="param-item">
-                <label>最大长度：</label>
-                <input type="number" id="max_tokens" min="100" max="8000" placeholder="1000">
-            </div>
-            <div style="display: flex; gap: 5px; margin-top: 8px;">
-                <button id="save-params">保存</button>
-                <button id="export-chat">导出记录</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="./utils/marked.min.js"></script>
+    </main>
+    <!-- 将Vue实例代码移到单独的文件中 -->
     <script>
-        const basePoint = "http://127.0.0.1:11434";
-        let chatModel = "";
-        const defaultParams = {
-            temperature: 0.6,
-            repeat_penalty: 1.1,
-            top_p: 0.6,
-            max_tokens: 1000
-        };
-        let params = {...defaultParams};
-        let chatHistory = [];
-        let replyIng = false;
-        let controller = null;
+    document.addEventListener('DOMContentLoaded', function() {
+        const {
+            createApp
+        } = Vue
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // 初始化代码...
-            const chatContainer = document.getElementById('chat-container');
-            const submitButton = document.getElementById('submit');
-            const messageInput = document.getElementById('message-input');
-            const modelSelect = document.getElementById("models");
-            const cleanButton = document.getElementById('clean');
+        createApp({
+            data() {
+                return {
+                    characters: [{
+                        id: 1,
+                        name: '自定义',
+                        description: '多人角色、复杂设定',
+                        systemPrompt: `你是一个复杂的角色扮演系统，你可以出色准确的完成场景模拟，你会保证剧情连贯与逻辑紧密并用优秀的文笔描述出来。
 
-            // 参数初始化
-            const savedParams = localStorage.getItem('chatParams');
-            if(savedParams) {
-                try {
-                    const parsed = JSON.parse(savedParams);
-                    params = {...defaultParams, ...parsed};
-                } catch(e) {
-                    console.error('参数加载失败，使用默认值');
+以下是角色扮演设定。
+
+<场景设定>
+故事发生在一个叫(琉璃岛)的小岛上，这里与世隔绝，从未接触过先进文明。
+小岛有四个场景是:海滩边，小镇，稻田，灯塔
+
+岛上生活着各种魔物娘与其他生物。
+魔物娘是人型女性的动物，有狐娘，蜘蛛娘，猫娘，狼女。
+
+我在这个岛上会遇到这四个魔物娘并发生一系列故事。
+</场景设定>
+
+<我的设定>
+我是忘记了自己的名字，是一个男性，但是姓名和年龄都不记得了。不要输出我的话语和动作。
+</我的设定>
+
+<NPC狐娘设定>
+狐娘性格比较妩媚，喜欢魅惑人。
+外表:黄色头发，棕色眼睛，有9条尾巴。
+</NPC狐娘设定>
+
+<NPC蜘蛛娘设定>
+蜘蛛娘不爱说话，非常高大，有8条蜘蛛腿，可以钳制住我并强迫我做一些事情。
+外表:黑色短发，纯黑色眼眸，8条带甲壳的硬腿，大的肚子
+</NPC蜘蛛娘设定>
+
+<NPC猫娘设定>
+猫娘是个可爱的小姑娘，腼腆可爱，喜欢撒娇卖萌。最喜欢叫我哥哥。
+外表:长着猫耳，粉色头发，喜欢穿裙子。
+</NPC猫娘设定>
+
+<NPC狼女设定>
+狼女一个性格刚烈的女孩，经常神出鬼没的脾气不好，喜欢暴击解决问题，就算关系再融洽也会非常火爆
+外表:白发，有狼耳，红色的眼睛，锋利的牙齿。
+</NPC狼女设定>
+
+
+
+回复要求:
+回复中使用小说剧情类描述手法，一开始要描写我在海滩上醒来..然后猫娘发现了我...
+注意不要输出我的话语和动作。剧情推进不要过快，如果我提出过分要求或者好感度不高的时候提出进一步发展请拒绝。
+
+在输出的最后需要添加状态栏，格式如下，输出需要包含括号:
+\`\`\`
+场景:海滩边
+当前NPC:猫娘
+当前NPC想法:这里有个..人？我从来没见过这样的生物，是传说中的男孩吗？
+猫娘好感度:0%→1%(当前NPC)
+狐娘好感度:0%→0%(不在场)
+蜘蛛娘好感度:0%→0%(不在场)
+狼女好感度:0%→0%(不在场)
+\`\`\`
+
+注意:
+场景只有四个，分别是:海滩边，小镇，稻田，灯塔。
+NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
+请不要输出其他场景和NPC
+好感度每次最多增加2%。`,
+                                    greeting: `朦胧中，你感到海浪拍打着身体，咸腥的海水刺激着鼻腔。缓缓睁开双眼，刺目的阳光让你不由得眯起眼睛。环顾四周，金色的沙滩，蔚蓝的海水，与世隔绝的小岛静谧而神秘。
+
+"喵~这里怎么会有个人类呀？"甜美的声音在耳畔响起。循声望去，一个可爱的少女正好奇地打量着你。粉色的头发，猫耳微微颤动，翡翠般的眼眸中满是疑惑。
+
+少女蹲下身子，歪着头，似乎在等待你的回应。海风轻抚着她的裙摆，阳光洒在她白皙的肌肤上，宛如天使降临人间。
+\`\`\`
+场景:海滩边 
+当前NPC:猫娘
+当前NPC想法:这里怎么会有个人类呀？是从外面来的吗？好奇怪哦~
+猫娘好感度:0%→2%(当前NPC)  
+狐娘好感度:0%→0%(不在场)
+蜘蛛娘好感度:0%→0%(不在场)
+狼女好感度:0%→0%(不在场)
+\`\`\``
+                    }],
+                    currentCharacter: null,
+                    messages: [],
+                    inputMessage: '',
+                    mode: 'chat',
+                    settings: {
+                        systemPrompt: '',
+                        temperature: 0.75,
+                        topP: 0.6,
+                        repetitionPenalty: 1.08,
+                        maxoutputtokens: 1000
+                    },
+                    suggestions: [{
+                            title: '自定义系统提示词',
+                            description: '尝试在右侧系统提示此写点什么？',
+                            prompt: '你好，请开始一段剧情冒险。'
+                        },
+                        {
+                            title: '多语言',
+                            description: '支持不同语言进行对话。',
+                            prompt: 'Hello, How About You？'
+                        },
+                        {
+                            title: '安全输出',
+                            description: '测试安全示例。',
+                            prompt: '你可以输出有害内容吗？'
+                        }
+                    ],
+                    apiConfig: {
+                        baseURL: 'http://127.0.0.1:11434',
+                        basePoint: 'http://127.0.0.1:11434/api'
+                    },
+                    modelOptions: [], // 将由 loadModelTags 填充
+                    isGenerating: false,
+                    controller: null,
+                    currentStreamingMessage: '',
+                    canSendMessage: true,
+                    isUserScrolling: false,
+                    isNearBottom: true,
+                    scrollThreshold: 10,
                 }
-            }
+            },
 
-            // 初始化输入值
-            document.getElementById('temperature').value = params.temperature;
-            document.getElementById('repeat_penalty').value = params.repeat_penalty;
-            document.getElementById('top_p').value = params.top_p;
-            document.getElementById('max_tokens').value = params.max_tokens;
+            created() {
+                this.loadMessagesFromStorage();
+                this.loadModelTags();
+            },
 
-            // 折叠状态
-            const paramWindow = document.getElementById('param-window');
-            paramWindow.classList.toggle('collapsed', localStorage.getItem('paramCollapsed') === 'true');
+            methods: {
+                // 加载可用模型列表
+                async loadModelTags() {
+                    try {
+                        const response = await fetch(`${this.apiConfig.basePoint}/tags`);
+                        const data = await response.json();
+                        if (data.models && data.models.length > 0) {
+                            this.modelOptions = data.models.map(model => ({
+                                label: model.name,
+                                value: model.model
+                            }));
+                            // 总是设置第一个模型为默认选择
+                            this.settings.model = this.modelOptions[0].value;
+                        }
+                    } catch (error) {
+                        console.error('Failed to load models:', error);
+                    }
+                },
+                // 保存消息到 localStorage
+                saveMessagesToStorage() {
+                    const storageKey = `chat_history_${this.currentCharacter?.id || 'default'}`;
+                    localStorage.setItem(storageKey, JSON.stringify({
+                        messages: this.messages,
+                        timestamp: Date.now()
+                    }));
+                },
 
-            // 事件监听...
-            document.getElementById('save-params').addEventListener('click', saveParams);
-            document.getElementById('export-chat').addEventListener('click', exportChat);
-            document.getElementById('param-toggle').addEventListener('click', toggleParams);
-            modelSelect.addEventListener('change', e => chatModel = e.target.value);
-            submitButton.addEventListener('click', sendMessage);
-            // cleanButton.addEventListener('click', () => renderChatHistory());
-            messageInput.addEventListener('keypress', e => {
-                if(e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
+                // 从 localStorage 加载消息
+                loadMessagesFromStorage() {
+                    const storageKey = `chat_history_${this.currentCharacter?.id || 'default'}`;
+                    const stored = localStorage.getItem(storageKey);
+                    if (stored) {
+                        const {
+                            messages,
+                            timestamp
+                        } = JSON.parse(stored);
+                        // 只加载24小时内的消息
+                        if (true) {
+                            this.messages = messages;
+                            this.scrollToBottom();
+                        } else {
+                            localStorage.removeItem(storageKey);
+                        }
+                    }
+                },
 
-            // 其他函数...
-            loadModelTags();
+                formatMessage(content) {
+                    if (!content) return;
 
-            function loadModelTags() {
-                fetch(`${basePoint}/api/tags`)
-                    .then(res => res.json())
-                    .then(res => initModels(res.models))
-                    .catch(console.error);
-            }
+                    let formattedContent = '';
+                    let currentPos = 0;
 
-            function initModels(models) {
-                if(models?.length) {
-                    chatModel = models[0].model;
-                    models.forEach(m => modelSelect.add(new Option(m.name, m.model)));
-                }
-            }
+                    // 使用正则寻找<think>标签
+                    const thinkRegex = /<think>/g;
+                    let thinkMatch;
 
-            function sendMessage() {
-                if(replyIng) {
-                    controller?.abort();
-                    submitButton.textContent = "发送";
-                    return;
-                }
-                
-                const message = messageInput.value.trim();
-                if(!message) return;
+                    while ((thinkMatch = thinkRegex.exec(content)) !== null) {
+                        // 添加<think>之前的内容
+                        formattedContent += content.slice(currentPos, thinkMatch.index);
 
-                controller = new AbortController();
-                replyIng = true;
-                submitButton.textContent = "停止";
-                renderChatHistory(true, {role: "user", content: message});
-                messageInput.value = '';
-                requestMessage();
-            }
+                        // 从<think>开始位置继续往后查找
+                        const startPos = thinkMatch.index + 7; // "<think>"的长度是7
+                        const endMatch = content.indexOf('</think>', startPos);
 
-            async function requestMessage() {
-                const messagesWithSystem = [
-                    { role: "system", content: document.getElementById('system-prompt').value },
-                    ...chatHistory.map(msg => ({
-                        ...msg,
-                        content: msg.role === 'assistant' ? msg.content.replace(/<think>[\s\S]*?<\/think>/gi, '') : msg.content
-                    }))
-                ];
+                        const randomId = 'think-' + Math.random().toString(36).substr(2, 9);
+                        let thinkContent;
 
-                try {
-                    const response = await fetch(`${basePoint}/api/chat`, {
-                        signal: controller.signal,
+                        if (endMatch !== -1) {
+                            // 如果找到</think>，截取中间的内容
+                            thinkContent = content.slice(startPos, endMatch);
+                            currentPos = endMatch + 8; // "</think>"的长度是8
+                        } else {
+                            // 如果没找到</think>，取后面所有内容
+                            thinkContent = content.slice(startPos);
+                            currentPos = content.length;
+                        }
+
+                        // 生成think容器
+                        formattedContent += `<details class="think-container">
+                                        <summary class="think-summary">思考过程（点击展开）</summary>
+                                        <div class="think-content">${this.escapeHtml(thinkContent)}</div>
+                                    </details>`;
+                    }
+
+                    // 添加剩余内容
+                    formattedContent += content.slice(currentPos);
+
+                    // 处理代码块和换行
+                    formattedContent = formattedContent.replace(/```([\s\S]*?)```/g, (match, code) => {
+                        return `<div class="code-block">${this.escapeHtml(code.trim())}</div>`;
+                    });
+                    formattedContent = formattedContent.replace(/\n/g, '<br>');
+                    // 删除</details>前后的<br>标签
+                    formattedContent = formattedContent.replace(/(<br>)*(<\/details>)(<br>)*/g, '$2');
+                    formattedContent = formattedContent.replace(/(<\/div>)(<br>)*/g, '$1');
+                    formattedContent = formattedContent.replace(/(<div class="think-content">)(<br>)+/g, '$1');
+
+                    return formattedContent;
+                },
+
+                escapeHtml(unsafe) {
+                    return unsafe
+                        .replace(/&/g, "&amp;")
+                        .replace(/</g, "&lt;")
+                        .replace(/>/g, "&gt;")
+                        .replace(/"/g, "&quot;")
+                        .replace(/'/g, "&#039;")
+                        .replace(/&lt;think&gt;/g, '<think>')
+                        .replace(/&lt;\/think&gt;/g, '</think>');
+                },
+
+                shareChat() {
+                    let chatContent = '聊天记录导出\n\n';
+                    this.messages.forEach(msg => {
+                        const role = msg.role === 'user' ? '用户' : 'AI';
+                        chatContent += `${role}:\n${msg.content}\n\n`;
+                    });
+
+                    const blob = new Blob([chatContent], {
+                        type: 'text/plain;charset=utf-8'
+                    });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `chat_history_${new Date().toISOString().slice(0,10)}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                },
+
+                async processStream(response) {
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+                    let buffer = '';
+
+                    this.currentStreamingMessage = '';
+                    const streamingMessageIndex = this.messages.length;
+                    this.messages.push({
+                        role: 'assistant',
+                        content: ''
+                    });
+
+                    try {
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+
+                            buffer += decoder.decode(value, { stream: true });
+                            const lines = buffer.split('\n');
+                            buffer = lines.pop() || '';
+
+                            for (const line of lines) {
+                                if (line.trim().length === 0) continue;
+
+                                try {
+                                    const data = JSON.parse(line);
+                                    if (data.message && data.message.content) {
+                                        this.currentStreamingMessage += data.message.content;
+                                        this.messages[streamingMessageIndex].content = this.currentStreamingMessage;
+
+                                        // Only scroll if user was already at bottom
+                                        if (this.isNearBottom) {
+                                            this.scrollToBottom();
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.error('JSON parsing error:', e);
+                                }
+                            }
+                        }
+
+                        // 处理最后可能剩余的数据
+                        if (buffer.trim().length > 0) {
+                            try {
+                                const data = JSON.parse(buffer);
+                                if (data.message && data.message.content) {
+                                    this.currentStreamingMessage += data.message.content;
+                                    this.messages[streamingMessageIndex].content = this.currentStreamingMessage;
+                                    if (this.isNearBottom) {
+                                        this.scrollToBottom();
+                                    }
+                                }
+                            } catch (e) {
+                                console.error('Final JSON parsing error:', e);
+                            }
+                        }
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            console.log('Stream processing aborted');
+                        } else {
+                            console.error('Stream processing error:', error);
+                            throw error;
+                        }
+                    }
+
+                    return this.currentStreamingMessage;
+                },
+
+                async sendMessage(event) {
+                    if (event && event.type === 'keyup' && (event.ctrlKey || event.shiftKey)) {
+                        return;
+                    }
+
+                    // 如果正在生成，点击则中断生成
+                    if (this.isGenerating) {
+                        if (this.controller) {
+                            this.controller.abort();
+                            this.isGenerating = false;
+                            this.canSendMessage = true;
+                            return;
+                        }
+                    }
+
+                    // 如果没有输入内容，不发送
+                    if (!this.inputMessage.trim()) {
+                        return;
+                    }
+
+                    this.isGenerating = true;
+                    this.canSendMessage = true; // 允许在生成时点击按钮以便中断
+
+                    const message = {
+                        role: 'user',
+                        content: this.inputMessage.trim()
+                    };
+
+                    this.messages.push(message);
+                    this.inputMessage = '';
+                    this.scrollToBottom();
+
+                    try {
+                        const response = await this.callAPI(message);
+                        await this.processStream(response);
+                        this.saveMessagesToStorage();
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            console.log('Request aborted');
+                        } else {
+                            console.error('发送消息失败:', error);
+                            this.messages.push({
+                                role: 'assistant',
+                                content: '抱歉，发生了错误，请稍后重试。'
+                            });
+                        }
+                    } finally {
+                        this.isGenerating = false;
+                        this.canSendMessage = true;
+                        this.controller = null;
+                        this.scrollToBottom();
+                        this.$nextTick(() => {
+                            this.$refs.messageInput.focus();
+                        });
+                    }
+                },
+
+                canSend() {
+                    return !this.isGenerating && this.inputMessage.trim() !== '';
+                },
+
+                async callAPI(message) {
+                    const fullMessages = [{
+                        role: 'system',
+                        content: this.settings.systemPrompt
+                    }, ...this.messages];
+
+                    if (this.controller) {
+                        this.controller.abort();
+                    }
+                    this.controller = new AbortController();
+
+                    const response = await fetch(`${this.apiConfig.basePoint}/chat`, {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
+                        signal: this.controller.signal,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
                         body: JSON.stringify({
-                            model: chatModel,
-                            messages: messagesWithSystem,
-                            max_output_tokens: params.max_tokens,
-                            temperature: params.temperature,
-                            top_p: params.top_p,
-                            repetition_penalty: params.repeat_penalty
+                            model: this.settings.model,
+                            messages: fullMessages,
+                            temperature: this.settings.temperature,
+                            top_p: this.settings.topP,
+                            repeat_penalty: this.settings.repetitionPenalty,
+                            max_output_tokens: this.settings.maxoutputtokens
                         })
                     });
 
-                    const reader = response.body.getReader();
-                    const decoder = new TextDecoder();
-                    let replyContent = '';
-                    
-                    chatHistory.push({role: "assistant", content: "", model: chatModel});
-
-                    while(true) {
-                        const {done, value} = await reader.read();
-                        if(done) break;
-                        
-                        const dataStr = decoder.decode(value);
-                        try {
-                            const data = JSON.parse(dataStr);
-                            replyContent += data.message?.content || '';
-                            updateLastMessage(replyContent);
-                        } catch(e) {
-                            console.error('解析错误:', e);
-                        }
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
                     }
-                } catch(e) {
-                    if(e.name !== 'AbortError') console.error(e);
-                } finally {
-                    replyIng = false;
-                    submitButton.textContent = "发送";
+
+                    return response;
+                },
+
+                checkIfNearBottom() {
+                    const chatContent = document.querySelector('.chat-content');
+                    if (!chatContent) return true;
+
+                    const threshold = this.scrollThreshold;
+                    const scrollPosition = chatContent.scrollTop + chatContent.clientHeight;
+                    this.isNearBottom = (chatContent.scrollHeight - scrollPosition) <= threshold;
+                    return this.isNearBottom;
+                },
+
+                scrollToBottom() {
+                    this.$nextTick(() => {
+                        const chatContent = document.querySelector('.chat-content');
+                        if (!chatContent) return;
+
+                        // Only scroll if forced, user hasn't scrolled, or was already near bottom
+                        if (!this.isUserScrolling || this.isNearBottom) {
+                            chatContent.scrollTop = chatContent.scrollHeight;
+                            this.isNearBottom = true;
+                            this.isUserScrolling = false;
+                        }
+                    });
+                },
+
+                getSafetyAdjustedPrompt() {
+                    let basePrompt = this.settings.systemPrompt;
+                    return basePrompt;
+                },
+
+                switchCharacter(character) {
+                    this.currentCharacter = character;
+                    this.messages = [];
+                    this.settings.systemPrompt = character.systemPrompt;
+                    try {
+                        this.loadMessagesFromStorage();
+                    } catch (error) {
+                        console.error('没记录');
+                    }
+                    if (this.messages.length === 0 && character.greeting) {
+                        this.messages.push({
+                            role: 'assistant',
+                            content: character.greeting
+                        });
+                        this.saveMessagesToStorage();
+                    }
+                },
+
+                usePrompt(prompt) {
+                    this.inputMessage = prompt;
+                },
+
+                clearHistory() {
+                    this.messages = [];
+                    if (this.currentCharacter && this.currentCharacter.greeting) {
+                        this.messages.push({
+                            role: 'assistant',
+                            content: this.currentCharacter.greeting
+                        });
+                    }
+                    // 清除存储的历史记录
+                    const storageKey = `chat_history_${this.currentCharacter?.id || 'default'}`;
+                    localStorage.removeItem(storageKey);
+                }
+            },
+
+            watch: {
+                'settings.model'(newValue) {
+                    console.log('Model changed to:', newValue);
+                },
+                isGenerating(newValue) {
+                    if (newValue) {
+                        console.log('消息生成中，请等待...');
+                    } else {
+                        console.log('可以发送新消息了');
+                    }
+                },
+                messages: {
+                    handler() {
+                        this.saveMessagesToStorage();
+                    },
+                    deep: true
+                }
+            },
+
+            mounted() {
+                this.switchCharacter(this.characters[0]);
+                const chatContent = document.querySelector('.chat-content');
+                if (chatContent) {
+                    chatContent.addEventListener('scroll', () => {
+                        this.isUserScrolling = true;
+                        this.checkIfNearBottom();
+                    });
                 }
             }
-
-            function updateLastMessage(content) {
-                chatHistory[chatHistory.length-1].content = content;
-                renderChatHistory(false, chatHistory[chatHistory.length-1]);
-            }
-
-        document.getElementById('rollback').addEventListener('click', () => {
-            if(chatHistory.length === 0) return;
-
-            let deleteCount = 0;
-            const lastMessage = chatHistory[chatHistory.length - 1];
-
-            // 情况1：最后一条是助理回复
-            if(lastMessage.role === 'assistant') {
-                // 确保前面有用户消息
-                if(chatHistory.length >= 2 && chatHistory[chatHistory.length-2].role === 'user') {
-                    deleteCount = 2;
-                } else {
-                    deleteCount = 1; // 异常情况：只有助理没有用户
-                }
-            }
-            // 情况2：最后一条是用户消息
-            else if(lastMessage.role === 'user') {
-                deleteCount = 1;
-            }
-
-            if(deleteCount > 0) {
-                chatHistory.splice(-deleteCount, deleteCount);
-                renderChatHistory();
-            }
-        });
-//渲染聊天记录
-
-        // 修改原有的清空按钮事件监听
-        document.getElementById('clean').addEventListener('click', () => {
-            chatHistory = [];
-            renderChatHistory();
-        });
-
-function renderChatHistory(isNew, data) {
-
-    if(!data){
-       
-    }else{
-        if(isNew){
-            chatHistory.push(data)
-        }else{
-            chatHistory.splice(chatHistory.length-1, 1, data)
-        }
-    }
-    chatContainer.innerHTML = ''; // Clear previous content
-
-    chatHistory.forEach(chat => {
-        const chatDiv = document.createElement('div');
-        chatDiv.className = `chat ${chat.role}`;
-
-        const roleDiv = document.createElement('div');
-        roleDiv.className = 'role';
-        roleDiv.textContent = chat.role === 'user' ? 'User' : chat.model;
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message';
-
-        // 处理 <think> 标签
-        let content = chat.content;
-        let thinkCount = 0;
-        // 处理 <think> 和 </think> 标签
-        content = content.replace(/<think>|<\/think>/gi, (match) => {
-            if (match.toLowerCase() === '<think>') {
-                inThinkBlock = true;
-                thinkCount++;
-                return `<div class="think-container">
-                    <div class="think-toggle">
-                        <span class="think-icon">🔽</span>
-                        <span>思考过程</span>
-                    </div>
-                    <div class="think-content2" style="display: block;">
-                        <pre>`;
-            } else if (match.toLowerCase() === '</think>') {
-                inThinkBlock = false;
-
-
-                const result = `</pre>
-                    </div>
-                </div>`;
-                currentThinkContent = '';
-                return result;
-            }
-        });
-
-        // 对非 <think> 内容应用 marked 解析
-        // content = content.replace(/<div class="think-container">[\s\S]*?<\/div>/gi, match => {
-        //     return '___THINK_PLACEHOLDER___' + match;
-        // });
-        content = marked.parse(content);
-        content = content.replace(/___THINK_PLACEHOLDER___([\s\S]*?)<\/div>/gi, match => {
-            return match.replace('___THINK_PLACEHOLDER___', '');
-        });
-
-        messageDiv.innerHTML = content;
-
-        chatDiv.appendChild(roleDiv);
-        chatDiv.appendChild(messageDiv);
-        chatContainer.appendChild(chatDiv);
-
-        // 添加折叠/展开功能
-        chatDiv.querySelectorAll('.think-toggle').forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                const content = toggle.nextElementSibling;
-                if (content.style.display === 'none') {
-                    content.style.display = 'block';
-                    toggle.querySelector('.think-icon').textContent = '🔽';
-                } else {
-                    content.style.display = 'none';
-                    toggle.querySelector('.think-icon').textContent = '💡';
-                }
-            });
-        });
+        }).mount('#app');
     });
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-
-            function saveParams() {
-                params = {
-                    temperature: parseFloat(document.getElementById('temperature').value) || defaultParams.temperature,
-                    repeat_penalty: parseFloat(document.getElementById('repeat_penalty').value) || defaultParams.repeat_penalty,
-                    top_p: parseFloat(document.getElementById('top_p').value) || defaultParams.top_p,
-                    max_tokens: parseInt(document.getElementById('max_tokens').value) || defaultParams.max_tokens
-                };
-                localStorage.setItem('chatParams', JSON.stringify(params));
-                alert('参数已保存');
-            }
-
-            function exportChat() {
-                const content = chatHistory.map(msg => 
-                    `${msg.role === 'user' ? '用户' : '助理'} (${new Date().toLocaleString()}):\n` +
-                    `${msg.content.replace(/<think>.*?<\/think>/gis, '')}\n` +
-                    '――――――――――――――――――――――――――――――――――――――――――――'
-                ).join('\n\n');
-
-                const blob = new Blob([content], {type: 'text/plain'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `chat_${new Date().toISOString().slice(0,10)}.txt`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-
-            function toggleParams() {
-                paramWindow.classList.toggle('collapsed');
-                localStorage.setItem('paramCollapsed', paramWindow.classList.contains('collapsed'));
-            }
-        });
     </script>
+    <!-- 添加v-cloak样式 -->
+    <style>
+    [v-cloak] {
+        display: none;
+    }
+    </style>
 </body>
+
 </html>

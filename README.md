@@ -1,65 +1,33 @@
+##一个简单的与ollama交互的网页应用在线访问
 
+-来自[作者官网](https://leftnorth.com/test.html)
 
-## 一个简单的与ollama交互的网页应用在线访问
+-适配 Ollama API
 
-- ![image](https://github.com/user-attachments/assets/2c577b03-a8e3-42ed-9b32-34a00391b613)
+-适配 DeepSex 14b 设置参数
 
-- ✅ 轻量级网页，即开即用
+-样式大幅精简，适合单角色对话
 
-- ✅ 前端增加思维链显示
+-输出时允许滚动
 
-- ✅ 自动调用ollama模型
+##自动配置
 
-## 更新日志：
+先运行`1配置后端.bat`
 
-- 0223更新
+再运行Html页面
 
-  - 增加高级参数调节功能
-  - 增加聊天记录导出功能
-  - 增加撤回最后一条信息功能
- 
-- 0216更新
+##手动配置
 
-  - 可更改系统提示词
- 
-- 0215更新
-
-  - 支持思维链模型
-
- 
-## 更新计划：
-
-- 支持更多参数调节✅
-- 支持保存对话内容✅
-- 支持自定义API
-- 支持更多思维链格式
-- 支持加载角色卡
-- 支持语音
-
-
-## 自动配置
-
-- 先运行`1配置后端.bat`
-
-- 再运行Html页面
-
-
-
-## 手动配置
-
-- 先配置好ollama环境变量:
+1、先配置好ollama环境变量:
 
 ```
 OLLAMA_HOST: :11434
 OLLAMA_ORIGINS: *
 ```
 
-- 重启ollama
+2、重启ollama
 
-- 在浏览器中打开html
-
+3、在浏览器中打开html
 
 原始代码来自
 https://github.com/Joburgess/ollama-simple-webui/tree/main
-
-- 没有原作者的智慧就无法诞生此项目，感谢原作者Joburgess的开源，有能力的大家去点个Star吧。
