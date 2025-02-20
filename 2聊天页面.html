@@ -172,7 +172,7 @@
 NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
 请不要输出其他场景和NPC
 好感度每次最多增加2%。`,
-                                    greeting: `朦胧中，你感到海浪拍打着身体，咸腥的海水刺激着鼻腔。缓缓睁开双眼，刺目的阳光让你不由得眯起眼睛。环顾四周，金色的沙滩，蔚蓝的海水，与世隔绝的小岛静谧而神秘。
+                        greeting: `朦胧中，你感到海浪拍打着身体，咸腥的海水刺激着鼻腔。缓缓睁开双眼，刺目的阳光让你不由得眯起眼睛。环顾四周，金色的沙滩，蔚蓝的海水，与世隔绝的小岛静谧而神秘。
 
 "喵~这里怎么会有个人类呀？"甜美的声音在耳畔响起。循声望去，一个可爱的少女正好奇地打量着你。粉色的头发，猫耳微微颤动，翡翠般的眼眸中满是疑惑。
 
@@ -257,6 +257,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     const storageKey = `chat_history_${this.currentCharacter?.id || 'default'}`;
                     localStorage.setItem(storageKey, JSON.stringify({
                         messages: this.messages,
+                        settings: this.settings,
                         timestamp: Date.now()
                     }));
                 },
@@ -268,14 +269,22 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     if (stored) {
                         const {
                             messages,
+                            settings,
                             timestamp
                         } = JSON.parse(stored);
-                        // 只加载24小时内的消息
-                        if (true) {
+                        // 加载消息
+                        if (messages) {
                             this.messages = messages;
                             this.scrollToBottom();
-                        } else {
-                            localStorage.removeItem(storageKey);
+                        }
+                        // 加载设置
+                        if (settings) {
+                            // 只更新存在的设置项，保留默认值
+                            Object.keys(this.settings).forEach(key => {
+                                if (settings[key] !== undefined) {
+                                    this.settings[key] = settings[key];
+                                }
+                            });
                         }
                     }
                 },
@@ -609,7 +618,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                 },
                 messages: {
                     handler() {
-                        this.saveMessagesToStorage();
+                        //this.saveMessagesToStorage();
                     },
                     deep: true
                 }
