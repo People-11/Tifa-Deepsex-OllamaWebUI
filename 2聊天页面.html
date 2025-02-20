@@ -545,7 +545,10 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
 
                         // Only scroll if forced, user hasn't scrolled, or was already near bottom
                         if (!this.isUserScrolling || this.isNearBottom) {
-                            chatContent.scrollTop = chatContent.scrollHeight;
+                            chatContent.scrollTo({
+                                top: chatContent.scrollHeight,
+                                behavior: 'smooth'
+                            });
                             this.isNearBottom = true;
                             this.isUserScrolling = false;
                         }
