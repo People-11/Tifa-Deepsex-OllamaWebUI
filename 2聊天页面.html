@@ -310,6 +310,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
 
                 formatMessage(content) {
                     if (!content) return;
+                    content = content.replace(/^\s*\n/, '');
 
                     let formattedContent = '';
                     let currentPos = 0;
