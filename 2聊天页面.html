@@ -40,8 +40,12 @@
                             </div>
                         </div>
                         <div class="message-list" v-else>
-                            <div v-for="msg in messages" :class="['message', msg.role]">
+                            <div v-for="(msg, index) in messages" :class="['message', msg.role]">
                                 <div class="message-content" v-html="formatMessage(msg.content)"></div>
+                                <!-- 为所有用户消息添加编辑按钮 -->
+                                <span v-if="msg.role === 'user'" class="edit-btn" @click="editMessage(msg, index)">
+                                    ✎
+                                </span>
                             </div>
                             <!-- 修改生成动画容器 -->
                             <div class="message assistant generating-container" v-if="isGenerating" style="align-self: center;background-color: transparent;">
@@ -225,7 +229,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     canSendMessage: true,
                     isUserScrolling: false,
                     isNearBottom: true,
-                    scrollThreshold: 10,
+                    scrollThreshold: 30,
                 }
             },
 
@@ -235,6 +239,21 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
             },
 
             methods: {
+                editMessage(message, index) {
+                    // 设置输入框内容为要编辑的消息
+                    this.inputMessage = message.content;
+
+                    // 删除该消息及其之后的所有消息
+                    this.messages = this.messages.slice(0, index);
+
+                    // 聚焦输入框
+                    this.$nextTick(() => {
+                        this.$refs.messageInput.focus();
+                    });
+
+                    // 保存更新后的消息记录
+                    this.saveMessagesToStorage();
+                },
                 // 加载可用模型列表
                 async loadModelTags() {
                     try {

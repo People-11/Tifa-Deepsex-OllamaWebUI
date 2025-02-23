@@ -346,6 +346,25 @@ body {
     padding: 0 1rem;
     border-radius: 8px;
     max-width: 100%;
+    position: relative;
+}
+
+.edit-btn {
+    position: absolute;
+    right: -10px;
+    top: 80%;
+    padding: 0 4px 3px;
+    font: 14px sans-serif;
+    color: #000;
+    background: #f0f0f0;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: .2s;
+}
+
+.message:hover .edit-btn {
+    opacity: 1;
 }
 
 .message.user {
