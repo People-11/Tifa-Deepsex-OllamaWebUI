@@ -11,27 +11,22 @@
 </head>
 
 <body>
-    <!-- 主要内容区域 -->
     <main class="main-container" id="app" style="align-items: center;">
         <div class="chat-layout">
             <div class="chat-main-big">
                 <!-- 聊天主区域 -->
                 <section class="chat-main">
                     <div class="chat-header">
-                        <h1>{{ currentCharacter?.name || '选择角色/Персонажи' }}</h1>
+                        <h1>{{ currentCharacter?.name || '角色扮演' }}</h1>
                         <div class="header-actions">
                             <button class="icon-btn" @click="shareChat">分享</button>
                         </div>
                     </div>
                     <div class="chat-content">
+                        <!-- 欢迎区域 -->
                         <div class="welcome-section" v-if="messages.length === 0">
                             <h2>开始一段新的对话</h2>
-                            <!--                             <div class="mode-tabs">
-                                <button class="tab" :class="{active: mode==='tools'}"
-                                    @click="mode='tools'">使用工具</button>
-                                <button class="tab" :class="{active: mode==='chat'}" @click="mode='chat'">纯聊天</button>
-                            </div> -->
-                            <p class="description">选择合适的模式开始对话</p>
+                            <p class="description">选择一个提示开始对话</p>
                             <div class="suggestion-cards">
                                 <div class="card" v-for="suggestion in suggestions" @click="usePrompt(suggestion.prompt)">
                                     <h3>{{suggestion.title}}</h3>
@@ -39,15 +34,16 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- 消息列表 -->
                         <div class="message-list" v-else>
                             <div v-for="(msg, index) in messages" :class="['message', msg.role]">
                                 <div class="message-content" v-html="formatMessage(msg.content)"></div>
-                                <!-- 为所有用户消息添加编辑按钮 -->
+                                <!-- 编辑按钮 -->
                                 <span v-if="msg.role === 'user'" class="edit-btn" @click="editMessage(msg, index)">
                                     ✎
                                 </span>
                             </div>
-                            <!-- 修改生成动画容器 -->
+                            <!-- 生成动画 -->
                             <div class="message assistant generating-container" v-if="isGenerating" style="align-self: center;background-color: transparent;">
                                 <div class="generating-animation">
                                     <span class="dot"></span>
@@ -57,7 +53,7 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 修改输入框部分 -->
+                    <!-- 输入区域 -->
                     <div class="chat-input">
                         <textarea ref="messageInput" v-model="inputMessage" placeholder="输入消息..." @keyup.enter="sendMessage"></textarea>
                         <div class="input-actions">
@@ -67,7 +63,7 @@
                         </div>
                     </div>
                 </section>
-                <!-- 右侧属性面板 -->
+                <!-- 设置面板 -->
                 <aside class="settings-panel">
                     <div class="panel-section">
                         <h3>模型选择</h3>
@@ -81,7 +77,7 @@
                         <h3>系统提示词</h3>
                         <textarea v-model="settings.systemPrompt"></textarea>
                     </div>
-                    <!-- 修改参数设置部分，添加数值显示 -->
+                    <!-- 参数设置 -->
                     <div class="panel-section">
                         <h3>参数设置</h3>
                         <label>Temperature: {{settings.temperature}}
@@ -97,17 +93,24 @@
                             <input type="range" v-model="settings.maxoutputtokens" min="100" max="2000" step="100">
                         </label>
                     </div>
+                    <!-- 思考模式开关 -->
+                    <div class="panel-section">
+                        <div class="toggle-switch">
+                            <label for="thinking-toggle">使用思考</label>
+                            <input id="thinking-toggle" type="checkbox" v-model="settings.useThinking">
+                            <span class="toggle-slider" @click="settings.useThinking = !settings.useThinking"></span>
+                        </div>
+                    </div>
                     <button class="clear-btn" @click="clearHistory">清空聊天记录</button>
                 </aside>
             </div>
         </div>
     </main>
-    <!-- 将Vue实例代码移到单独的文件中 -->
+
+    <!-- Vue实例代码 -->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const {
-            createApp
-        } = Vue
+        const { createApp } = Vue
 
         createApp({
             data() {
@@ -194,13 +197,14 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     currentCharacter: null,
                     messages: [],
                     inputMessage: '',
-                    mode: 'chat',
                     settings: {
+                        model: '',
                         systemPrompt: '',
-                        temperature: 0.75,
+                        temperature: 0.6,
                         topP: 0.6,
-                        repetitionPenalty: 1.08,
-                        maxoutputtokens: 1000
+                        repetitionPenalty: 1.06,
+                        maxoutputtokens: 1000,
+                        useThinking: true // 默认开启思考模式
                     },
                     suggestions: [{
                             title: '自定义系统提示词',
@@ -222,12 +226,10 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                         baseURL: 'http://127.0.0.1:11434',
                         basePoint: 'http://127.0.0.1:11434/api'
                     },
-                    modelOptions: [], // 将由 loadModelTags 填充
+                    modelOptions: [],
                     isGenerating: false,
                     controller: null,
                     currentStreamingMessage: '',
-                    canSendMessage: true,
-                    isUserScrolling: false,
                     isNearBottom: true,
                     scrollThreshold: 30,
                 }
@@ -239,22 +241,17 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
             },
 
             methods: {
+                // 编辑消息
                 editMessage(message, index) {
-                    // 设置输入框内容为要编辑的消息
                     this.inputMessage = message.content;
-
-                    // 删除该消息及其之后的所有消息
                     this.messages = this.messages.slice(0, index);
-
-                    // 聚焦输入框
                     this.$nextTick(() => {
                         this.$refs.messageInput.focus();
                     });
-
-                    // 保存更新后的消息记录
                     this.saveMessagesToStorage();
                 },
-                // 加载可用模型列表
+
+                // 加载可用模型
                 async loadModelTags() {
                     try {
                         const response = await fetch(`${this.apiConfig.basePoint}/tags`);
@@ -264,14 +261,14 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                                 label: model.name,
                                 value: model.model
                             }));
-                            // 总是设置第一个模型为默认选择
                             this.settings.model = this.modelOptions[0].value;
                         }
                     } catch (error) {
                         console.error('Failed to load models:', error);
                     }
                 },
-                // 保存消息到 localStorage
+
+                // 保存消息到本地
                 saveMessagesToStorage() {
                     const storageKey = `chat_history_${this.currentCharacter?.id || 'default'}`;
                     localStorage.setItem(storageKey, JSON.stringify({
@@ -281,24 +278,17 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     }));
                 },
 
-                // 从 localStorage 加载消息
+                // 加载消息
                 loadMessagesFromStorage() {
                     const storageKey = `chat_history_${this.currentCharacter?.id || 'default'}`;
                     const stored = localStorage.getItem(storageKey);
                     if (stored) {
-                        const {
-                            messages,
-                            settings,
-                            timestamp
-                        } = JSON.parse(stored);
-                        // 加载消息
+                        const { messages, settings } = JSON.parse(stored);
                         if (messages) {
                             this.messages = messages;
                             this.scrollToBottom();
                         }
-                        // 加载设置
                         if (settings) {
-                            // 只更新存在的设置项，保留默认值
                             Object.keys(this.settings).forEach(key => {
                                 if (settings[key] !== undefined) {
                                     this.settings[key] = settings[key];
@@ -308,54 +298,48 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     }
                 },
 
+                // 格式化消息
                 formatMessage(content) {
                     if (!content) return;
                     content = content.replace(/^\s*\n/, '');
-
                     let formattedContent = '';
                     let currentPos = 0;
 
-                    // 使用正则寻找<think>标签
+                    // 处理思考标签
                     const thinkRegex = /<think>/g;
                     let thinkMatch;
 
                     while ((thinkMatch = thinkRegex.exec(content)) !== null) {
-                        // 添加<think>之前的内容
                         formattedContent += content.slice(currentPos, thinkMatch.index);
-
-                        // 从<think>开始位置继续往后查找
-                        const startPos = thinkMatch.index + 7; // "<think>"的长度是7
+                        const startPos = thinkMatch.index + 7;
                         const endMatch = content.indexOf('</think>', startPos);
-
                         const randomId = 'think-' + Math.random().toString(36).substr(2, 9);
                         let thinkContent;
 
                         if (endMatch !== -1) {
-                            // 如果找到</think>，截取中间的内容
                             thinkContent = content.slice(startPos, endMatch);
-                            currentPos = endMatch + 8; // "</think>"的长度是8
+                            currentPos = endMatch + 8;
                         } else {
-                            // 如果没找到</think>，取后面所有内容
                             thinkContent = content.slice(startPos);
                             currentPos = content.length;
                         }
 
-                        // 生成think容器
                         formattedContent += `<details class="think-container">
-                                        <summary class="think-summary">思考过程（点击展开）</summary>
-                                        <div class="think-content">${this.escapeHtml(thinkContent)}</div>
-                                    </details>`;
+            <summary class="think-summary">思考过程（点击展开）</summary>
+            <div class="think-content">${this.escapeHtml(thinkContent)}</div>
+        </details>`;
                     }
 
-                    // 添加剩余内容
                     formattedContent += content.slice(currentPos);
 
                     // 处理代码块和换行
                     formattedContent = formattedContent.replace(/```([\s\S]*?)```/g, (match, code) => {
                         return `<div class="code-block">${this.escapeHtml(code.trim())}</div>`;
                     });
+
                     formattedContent = formattedContent.replace(/\n/g, '<br>');
-                    // 删除</details>前后的<br>标签
+
+                    // 清理不必要的标签
                     formattedContent = formattedContent.replace(/(<br>)*(<\/details>)(<br>)*/g, '$2');
                     formattedContent = formattedContent.replace(/(<\/div>)(<br>)*/g, '$1');
                     formattedContent = formattedContent.replace(/(<div class="think-content">)(<br>)+/g, '$1');
@@ -363,6 +347,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     return formattedContent;
                 },
 
+                // HTML转义
                 escapeHtml(unsafe) {
                     return unsafe
                         .replace(/&/g, "&amp;")
@@ -374,6 +359,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                         .replace(/&lt;\/think&gt;/g, '</think>');
                 },
 
+                // 分享聊天记录
                 shareChat() {
                     let chatContent = '聊天记录导出\n\n';
                     this.messages.forEach(msg => {
@@ -381,9 +367,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                         chatContent += `${role}:\n${msg.content}\n\n`;
                     });
 
-                    const blob = new Blob([chatContent], {
-                        type: 'text/plain;charset=utf-8'
-                    });
+                    const blob = new Blob([chatContent], { type: 'text/plain;charset=utf-8' });
                     const url = window.URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
@@ -394,6 +378,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     document.body.removeChild(a);
                 },
 
+                // 处理流式响应
                 async processStream(response) {
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder('utf-8');
@@ -423,8 +408,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                                     if (data.message && data.message.content) {
                                         this.currentStreamingMessage += data.message.content;
                                         this.messages[streamingMessageIndex].content = this.currentStreamingMessage;
-
-                                        // Only scroll if user was already at bottom
+                                        
                                         if (this.isNearBottom) {
                                             this.scrollToBottom();
                                         }
@@ -435,7 +419,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                             }
                         }
 
-                        // 处理最后可能剩余的数据
+                        // 处理最后的数据
                         if (buffer.trim().length > 0) {
                             try {
                                 const data = JSON.parse(buffer);
@@ -462,28 +446,27 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     return this.currentStreamingMessage;
                 },
 
+                // 发送消息
                 async sendMessage(event) {
                     if (event && event.type === 'keyup' && (event.ctrlKey || event.shiftKey)) {
                         return;
                     }
 
-                    // 如果正在生成，点击则中断生成
+                    // 中断生成
                     if (this.isGenerating) {
                         if (this.controller) {
                             this.controller.abort();
                             this.isGenerating = false;
-                            this.canSendMessage = true;
                             return;
                         }
                     }
 
-                    // 如果没有输入内容，不发送
+                    // 检查输入内容
                     if (!this.inputMessage.trim()) {
                         return;
                     }
 
                     this.isGenerating = true;
-                    this.canSendMessage = true; // 允许在生成时点击按钮以便中断
 
                     const message = {
                         role: 'user',
@@ -510,7 +493,6 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                         }
                     } finally {
                         this.isGenerating = false;
-                        this.canSendMessage = true;
                         this.controller = null;
                         this.scrollToBottom();
                         this.$nextTick(() => {
@@ -519,15 +501,25 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     }
                 },
 
-                canSend() {
-                    return !this.isGenerating && this.inputMessage.trim() !== '';
-                },
-
+                // 调用API
                 async callAPI(message) {
+                    // 创建消息并添加思考标签
+                    const apiMessages = this.messages.map((msg, index) => {
+                        if (msg.role === 'user' &&
+                            index === this.messages.length - 1 &&
+                            this.settings.useThinking) {
+                            return {
+                                role: 'user',
+                                content: msg.content + "\n使用<think>思考900字"
+                            };
+                        }
+                        return { ...msg };
+                    });
+
                     const fullMessages = [{
                         role: 'system',
                         content: this.settings.systemPrompt
-                    }, ...this.messages];
+                    }, ...apiMessages];
 
                     if (this.controller) {
                         this.controller.abort();
@@ -557,6 +549,7 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     return response;
                 },
 
+                // 检查是否靠近底部
                 checkIfNearBottom() {
                     const chatContent = document.querySelector('.chat-content');
                     if (!chatContent) return true;
@@ -567,37 +560,26 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     return this.isNearBottom;
                 },
 
+                // 滚动到底部
                 scrollToBottom() {
                     this.$nextTick(() => {
                         const chatContent = document.querySelector('.chat-content');
                         if (!chatContent) return;
 
-                        // Only scroll if forced, user hasn't scrolled, or was already near bottom
-                        if (!this.isUserScrolling || this.isNearBottom) {
-                            chatContent.scrollTo({
-                                top: chatContent.scrollHeight,
-                                behavior: 'smooth'
-                            });
-                            this.isNearBottom = true;
-                            this.isUserScrolling = false;
-                        }
+                        chatContent.scrollTo({
+                            top: chatContent.scrollHeight,
+                            behavior: 'smooth'
+                        });
                     });
                 },
 
-                getSafetyAdjustedPrompt() {
-                    let basePrompt = this.settings.systemPrompt;
-                    return basePrompt;
-                },
-
+                // 切换角色
                 switchCharacter(character) {
                     this.currentCharacter = character;
                     this.messages = [];
                     this.settings.systemPrompt = character.systemPrompt;
-                    try {
-                        this.loadMessagesFromStorage();
-                    } catch (error) {
-                        console.error('没记录');
-                    }
+                    this.loadMessagesFromStorage();
+                    
                     if (this.messages.length === 0 && character.greeting) {
                         this.messages.push({
                             role: 'assistant',
@@ -607,10 +589,12 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                     }
                 },
 
+                // 使用建议提示
                 usePrompt(prompt) {
                     this.inputMessage = prompt;
                 },
 
+                // 清空历史记录
                 clearHistory() {
                     this.messages = [];
                     if (this.currentCharacter && this.currentCharacter.greeting) {
@@ -619,28 +603,8 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                             content: this.currentCharacter.greeting
                         });
                     }
-                    // 清除存储的历史记录
                     const storageKey = `chat_history_${this.currentCharacter?.id || 'default'}`;
                     localStorage.removeItem(storageKey);
-                }
-            },
-
-            watch: {
-                'settings.model'(newValue) {
-                    console.log('Model changed to:', newValue);
-                },
-                isGenerating(newValue) {
-                    if (newValue) {
-                        console.log('消息生成中，请等待...');
-                    } else {
-                        console.log('可以发送新消息了');
-                    }
-                },
-                messages: {
-                    handler() {
-                        //this.saveMessagesToStorage();
-                    },
-                    deep: true
                 }
             },
 
@@ -649,7 +613,6 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
                 const chatContent = document.querySelector('.chat-content');
                 if (chatContent) {
                     chatContent.addEventListener('scroll', () => {
-                        this.isUserScrolling = true;
                         this.checkIfNearBottom();
                     });
                 }
@@ -657,12 +620,6 @@ NPC只有四个，分别是:有狐娘，蜘蛛娘，猫娘，狼女。
         }).mount('#app');
     });
     </script>
-    <!-- 添加v-cloak样式 -->
-    <style>
-    [v-cloak] {
-        display: none;
-    }
-    </style>
 </body>
 
 </html>
